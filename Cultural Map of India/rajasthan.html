@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rajasthan – Culture & Tradition</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+      background-color: #fffaf2;
+      color: #333;
+      scroll-behavior: smooth;
+    }
+
+    header {
+      background: linear-gradient(90deg, #800000, #c79c2e);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-family: Georgia, 'Times New Roman', Times, serif;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+
+    nav {
+      display: flex;
+      font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+      justify-content: center;
+      background: #fff2de;
+      padding: 10px 0;
+      font-size: 20px;
+    }
+
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #800000;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: #c79c2e;
+    }
+
+    section {
+      padding: 50px 10%;
+      border-bottom: 2px solid #f3d9a4;
+    }
+
+    section h2 {
+      text-align: center;
+      color: #800000;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(128,0,0,0.3);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    footer {
+      text-align: center;
+      background-color: #800000;
+      padding: 15px 0;
+      color: white;
+      font-weight: 500;
+    }
+
+    /* Back to Top Button */
+    #topBtn {
+      display: none;
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 99;
+      background-color: #800000;
+      color: white;
+      border: none;
+      outline: none;
+      padding: 12px 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transition: background-color 0.3s, transform 0.3s;
+    }
+
+    #topBtn:hover {
+      background-color: #c79c2e;
+      color: #fffaf2;
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Rajasthan – The Land of Kings</h1>
+  </header>
+
+  <nav>
+    <a href="#foods">Foods</a>
+    <a href="#dresses">Dresses</a>
+    <a href="#festivals">Festivals</a>
+    <a href="#art">Art</a>
+    <a href="#monuments">Monuments</a>
+  </nav>
+
+  <!-- Traditional Foods Section -->
+  <section id="foods">
+    <h2>Traditional Foods</h2>
+    <div class="content">
+      <div class="card">
+        <img src="pics/rj-daal.jpg" alt="Daal batti churma">
+        <h3>Daal Batti Churma</h3>
+        <p>A signature dish of Rajasthan made with baked wheat balls, spicy lentils, and sweet churma.
+It represents the rich and hearty flavors of Rajasthani cuisine.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-gatte.jpg" alt="Gatte ki sabzi">
+        <h3>Gatte ki Sabzi</h3>
+        <p>Made from gram flour dumplings cooked in tangy yogurt gravy.
+It’s a popular dish from the dry regions of Rajasthan.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-maas.jpg" alt="Laal Maas">
+        <h3>Laal Maas</h3>
+        <p>A spicy mutton curry made with red chilies and rich aromatic spices.
+It’s known for its fiery flavor and royal origin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Traditional Dresses Section -->
+  <section id="dresses">
+    <h2>Traditional Dresses</h2>
+    <div class="content">
+      <div class="card">
+        <img src="pics/rj-gagra.jpg" alt="Ghagra Choli">
+        <h3>Ghagra Choli</h3>
+        <p>Women wear colourful ghagra choli with odhani.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-turban.jpg" alt="Dhoti Kurta with Turban">
+        <h3>Dhoti Kurta with Turban</h3>
+        <p>Men wear dhoti kurta paired with vibrant turbans called pagris.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Festivals Section -->
+  <section id="festivals">
+    <h2>Festivals of Rajasthan</h2>
+    <div class="content">
+      <div class="card">
+        <img src="pics/rj-pushpak.jpg" alt="Pushkar Fair">
+        <h3>Pushkar Fair</h3>
+        <p>A famous camel and cattle fair held annually in Pushkar.
+It’s filled with music, dance, and cultural performances.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-teej.jpg" alt="Teej">
+        <h3>Teej</h3>
+        <p>A festival celebrated by women to welcome the monsoon.
+They wear green clothes, sing folk songs, and enjoy swings.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-desert.jpg" alt="Desert Festival">
+        <h3>Desert Festival</h3>
+        <p>Held in Jaisalmer, it celebrates desert life with folk dance and camel shows.
+It highlights Rajasthan’s music, costumes, and traditions.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-gangaur.jpg" alt="Gangaur">
+        <h3>Gangaur</h3>
+        <p>Dedicated to Goddess Gauri, symbolizing love and marital bliss.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Art Section -->
+  <section id="art">
+    <h2>Traditional Art</h2>
+    <div class="content">
+      <div class="card">
+        <img src="pics/rj-miniature.jpg" alt="Miniature Paintings">
+        <h3>Miniature Paintings</h3>
+        <p>These delicate artworks depict royal life, battles, and nature in fine detail.
+They are painted with natural colors and gold, showing royal artistry.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-blue.jpg" alt="Blue Pottery">
+        <h3>Blue Pottery</h3>
+        <p>Made using quartz and unique blue dye, it stands out for its shine and beauty.
+This art form blends Persian and Indian styles beautifully.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-block.jpg" alt="Block Printing">
+        <h3>Block Printing</h3>
+        <p>Patterns are hand-printed on fabric using carved wooden blocks.
+It showcases Rajasthan’s vibrant colors and traditional textile art.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Monuments Section -->
+  <section id="monuments">
+    <h2>Famous Monuments</h2>
+    <div class="content">
+      <div class="card">
+        <img src="pics/rj-amerfort.jpg" alt="Amer Fort">
+        <h3>Amer Fort</h3>
+        <p>Located in Jaipur, Amer Fort is known for its artistic blend of Hindu and Mughal architecture, with grand courtyards and mirror work.</p>
+      </div>
+      <div class="card">
+        <img src="pics/rj-hawamahal.jpg" alt="Hawa Mahal">
+        <h3>Hawa Mahal</h3>
+        <p>The iconic “Palace of Winds” in Jaipur, built with red and pink sandstone, known for its 953 windows allowing royal women to view street festivals.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 Culture of Rajasthan | Designed for Heritage Project</p>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button onclick="topFunction()" id="topBtn" title="Go to top">↑ Top</button>
+
+  <script>
+    // Smooth fade-in effect on scroll
+    const cards = document.querySelectorAll('.card');
+    window.addEventListener('scroll', () => {
+      cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 50) {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }
+      });
+    });
+
+    cards.forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(40px)';
+      card.style.transition = 'all 0.8s ease';
+    });
+
+    // Back to Top button functionality
+    const topButton = document.getElementById("topBtn");
+    window.onscroll = function() {
+      if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+        topButton.style.display = "block";
+      } else {
+        topButton.style.display = "none";
+      }
+    };
+
+    function topFunction() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+</body>
+</html>

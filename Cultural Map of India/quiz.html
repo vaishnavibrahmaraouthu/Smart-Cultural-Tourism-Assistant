@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tales of Tradition Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .quiz-container {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 25px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 400px;
+      position: relative;
+      animation: fadeIn 1s ease;
+    }
+
+    h2 {
+      color: #e67300;
+      margin-bottom: 20px;
+      font-weight: 700;
+      animation: float 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-8px); }
+    }
+
+    .option {
+      background: #fef3e2;
+      border: 2px solid transparent;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .option:hover {
+      background: #ffe0b2;
+      transform: scale(1.03);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .correct {
+      background-color: #b7f7b7 !important;
+      border-color: #28a745;
+      animation: pop 0.5s;
+    }
+
+    .wrong {
+      background-color: #f8b4b4 !important;
+      border-color: #d62828;
+      animation: shake 0.5s;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    button {
+      background-color: #ffb347;
+      border: none;
+      padding: 12px 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #ffd580;
+      transform: scale(1.05);
+    }
+
+    #feedback {
+      font-weight: bold;
+      margin-top: 10px;
+      height: 25px;
+    }
+
+    #result {
+      font-size: 20px;
+      font-weight: bold;
+      color: #e67300;
+      display: none;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .emoji {
+      font-size: 60px;
+      margin-bottom: 10px;
+      animation: pop 1s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2>🇮🇳 Tales of Tradition Quiz</h2>
+    <div id="quiz">
+      <p id="question">Loading question...</p>
+      <div id="options"></div>
+      <p id="feedback"></p>
+      <button onclick="nextQuestion()">Next ➡</button>
+    </div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const quizData = [
+      { question: "Which state is famous for Kathakali dance?", options: ["Kerala", "Rajasthan", "Punjab", "Odisha"], answer: "Kerala" },
+      { question: "Dal Baati Churma is a popular dish of which state?", options: ["Rajasthan", "Gujarat", "Bihar", "Tamil Nadu"], answer: "Rajasthan" },
+      { question: "Charminar is located in which Indian city?", options: ["Delhi", "Hyderabad", "Lucknow", "Bhopal"], answer: "Hyderabad" },
+      { question: "Which festival is mainly celebrated in Kerala?", options: ["Onam", "Lohri", "Durga Puja", "Bihu"], answer: "Onam" },
+      { question: "Ajanta Caves are famous for which type of art?", options: ["Fresco Paintings", "Metal Art", "Pottery", "Sculpture"], answer: "Fresco Paintings" },
+      { question: "Which monument is known as the 'Palace of Winds'?", options: ["Hawa Mahal", "Red Fort", "City Palace", "Amber Fort"], answer: "Hawa Mahal" },
+      { question: "Which fort in Kerala offers a sea view?", options: ["Bekal Fort", "Golconda Fort", "Agra Fort", "Chittorgarh Fort"], answer: "Bekal Fort" },
+      { question: "Ramappa Temple is located in which state?", options: ["Telangana", "Karnataka", "Odisha", "Madhya Pradesh"], answer: "Telangana" },
+      { question: "Ellora Caves are known for temples of which religions?", options: ["Hindu, Buddhist & Jain", "Only Hindu", "Only Buddhist", "Christian & Hindu"], answer: "Hindu, Buddhist & Jain" },
+      { question: "Chhatrapati Shivaji Maharaj Terminus is in which city?", options: ["Mumbai", "Pune", "Nagpur", "Delhi"], answer: "Mumbai" }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const feedbackEl = document.getElementById("feedback");
+    const resultEl = document.getElementById("result");
+
+    function loadQuestion() {
+      const current = quizData[currentQuestion];
+      questionEl.textContent = current.question;
+      optionsEl.innerHTML = "";
+      feedbackEl.textContent = "";
+      answered = false;
+
+      current.options.forEach(option => {
+        const div = document.createElement("div");
+        div.textContent = option;
+        div.classList.add("option");
+        div.onclick = () => selectOption(div, option);
+        optionsEl.appendChild(div);
+      });
+    }
+
+    function selectOption(selectedDiv, selected) {
+      if (answered) return;
+      answered = true;
+
+      const correct = quizData[currentQuestion].answer;
+      const optionDivs = document.querySelectorAll(".option");
+
+      optionDivs.forEach(div => {
+        if (div.textContent === correct) div.classList.add("correct");
+        if (div.textContent === selected && selected !== correct) div.classList.add("wrong");
+      });
+
+      if (selected === correct) {
+        score++;
+        feedbackEl.textContent = "✅ Correct!";
+        feedbackEl.style.color = "green";
+      } else {
+        feedbackEl.textContent = `❌ Wrong! Correct answer: ${correct}`;
+        feedbackEl.style.color = "red";
+      }
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < quizData.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById("quiz").style.display = "none";
+      let emoji = score >= 8 ? "🎉" : score >= 5 ? "😊" : "😅";
+      resultEl.style.display = "block";
+      resultEl.innerHTML = `
+        <div class="emoji">${emoji}</div>
+        <p>You scored <strong>${score}</strong> out of <strong>${quizData.length}</strong>!</p>
+        <p>${score >= 8 ? "Fantastic! You're a true culture expert!" :
+          score >= 5 ? "Good job! You know quite a bit!" :
+          "Keep exploring India's rich traditions!"}</p>
+      `;
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Incredible India — AI Monument Explorer</title>
+  <style>
+    /* Simple clean styles */
+    body{font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; margin:0; background:linear-gradient(120deg,#fff7ec,#ffd7a8); color:#222}
+    header{padding:20px;text-align:center;background:rgba(255,255,255,0.4);border-bottom:1px solid rgba(0,0,0,0.05)}
+    header h1{margin:0;color:#9b2b00}
+    .container{max-width:920px;margin:30px auto;padding:22px;background:rgba(255,255,255,0.95);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.08)}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+    input[type=text]{padding:10px;border-radius:10px;border:2px solid #ff8c00;width:60%;min-width:220px}
+    button{padding:10px 14px;border-radius:10px;border:none;background:#ff8c00;color:#fff;font-weight:600;cursor:pointer}
+    button.secondary{background:#4caf50}
+    button.blue{background:#1e88e5}
+    button.gray{background:#666}
+    #output{margin-top:18px;text-align:left;background:#fff5e6;padding:18px;border-radius:10px;box-shadow:inset 0 0 10px rgba(0,0,0,0.03)}
+    img#mainImage{width:100%;max-height:420px;object-fit:cover;border-radius:8px;margin-top:12px}
+    iframe.map{width:100%;height:300px;border-radius:8px;margin-top:12px;border:none}
+    small.hint{display:block;text-align:center;margin-top:8px;color:#444}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .chip{background:#fff;border-radius:999px;padding:6px 12px;border:1px solid #eee}
+    a.link{color:#155fa0;text-decoration:none;font-weight:600}
+    footer{padding:14px;text-align:center;color:#444;font-size:0.95rem;margin-top:18px}
+    @media(max-width:600px){input[type=text]{width:100%}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🕌 Incredible India — AI Monument Explorer</h1>
+    <div style="font-size:0.95rem;color:#333;margin-top:8px">Text search • Voice search • Image recognition • Speak & Map</div>
+  </header>
+
+  <main class="container">
+    <div class="controls">
+      <input id="q" type="text" placeholder="Type a monument name (e.g. Taj Mahal, Golconda Fort, Hawa Mahal)"/>
+      <button id="searchBtn">🔍 Search</button>
+      <button id="talkBtn" class="blue">🎤 Talk</button>
+      <button id="speakBtn" class="secondary">🔊 Speak</button>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap">
+      <label class="chip">Image recognition:</label>
+      <input id="file" type="file" accept="image/*" style="padding:8px;border-radius:8px"/>
+      <button id="identifyBtn" class="gray">🔎 Identify from Image</button>
+    </div>
+
+    <small class="hint">Tip: For best image recognition, use clear photos of the monument (front view). If you have a Google Vision API key you can enable server-like landmark detection — see the `VISION_API_KEY` variable in the script.</small>
+
+    <div id="output"></div>
+  </main>
+
+  <footer>Made for learning — Smart Cultural Tourism Assistant • Demo</footer>
+
+<script>
+/*
+Complete client-side app:
+- Text search (Wikipedia summary + thumbnail)
+- Fuzzy match (best-effort)
+- Map embed (Google Maps)
+- Speak button (SpeechSynthesis)
+- Talk / voice input (SpeechRecognition)
+- Image recognition:
+    - If VISION_API_KEY set => call Google Vision Landmark Detection (client-side POST)
+      (Note: using client-side API key is not secure for production; for demo replace with your key or use a backend)
+    - Fallback: TensorFlow.js MobileNet runs in-browser to get labels; we use best label to search Wikipedia
+*/
+
+///////////////////// CONFIG /////////////////////
+// If you have a Google Vision API key and accept the security implications for demo, paste it here.
+// PRODUCTION NOTE: Do NOT expose keys client-side in a real app. Use a backend instead.
+const VISION_API_KEY = ""; // <-- OPTIONAL: paste your Google Vision API KEY here to enable Landmark Detection
+
+// small manual coordinates database for major monuments (used to show map)
+// you can expand this later
+const COORDS = {
+  "taj mahal": [27.1751,78.0421],
+  "qutub minar": [28.5244,77.1855],
+  "red fort": [28.6562,77.2410],
+  "charminar": [17.3616,78.4747],
+  "gateway of india": [18.9218,72.8347],
+  "hawa mahal": [26.9239,75.8267],
+  "golconda fort": [17.3833,78.4011],
+  "mysore palace": [12.3052,76.6552],
+  "konark sun temple": [19.8876,86.0945],
+  "sun temple modhera": [23.8305,72.6036],
+  "golden temple": [31.6200,74.8765],
+  "india gate": [28.6129,77.2295],
+  "ajanta caves": [20.5520,75.7033],
+  "ellora caves": [20.0268,75.1790],
+  "rani ki vav": [23.8589,72.1010],
+  "victoria memorial": [22.5448,88.3426],
+  "khajuraho temples": [24.8318,79.9199],
+  "sanchi stupa": [23.4865,77.7390],
+  "meenakshi temple": [9.9195,78.1193]
+};
+
+////////////////// Helper functions //////////////////
+function el(id){return document.getElementById(id)}
+function sanitizeForUrl(s){ return encodeURIComponent(s); }
+
+// Simple Levenshtein algorithm for fuzzy match (works fine for small lists)
+function levenshtein(a,b){
+  a = a||""; b = b||"";
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1},()=>Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0]=i;
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      const cost = a[i-1]===b[j-1]?0:1;
+      dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[m][n];
+}
+
+// find best string from our COORDS keys by fuzzy distance; returns key
+function bestLocalMatch(query){
+  query = query.toLowerCase().trim();
+  let best=null, bestD=Infinity;
+  Object.keys(COORDS).forEach(k=>{
+    const d = levenshtein(query,k);
+    if(d < bestD){ bestD=d; best=k; }
+  });
+  return best;
+}
+
+// show a notification in output area
+function writeOutput(html){ el('output').innerHTML = html; }
+
+///////////////// Wikipedia fetch ///////////////////
+// Fetch summary from Wikipedia REST API
+async function wikiSummary(title){
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${sanitizeForUrl(title)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Not found on Wikipedia');
+  const data = await res.json();
+  return data;
+}
+
+///////////////// Map helper ///////////////////
+function mapHtmlForCoords(lat, lon){
+  // Using Google Maps embed link (works without API key)
+  const src = `https://www.google.com/maps?q=${lat},${lon}&output=embed`;
+  return `<iframe class="map" src="${src}" loading="lazy"></iframe>`;
+}
+
+///////////////// Speak ///////////////////
+function speakText(text){
+  if(!text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-IN';
+  u.rate = 1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+///////////////// Voice input ///////////////////
+function startListening(){
+  if(!(window.SpeechRecognition || window.webkitSpeechRecognition)){
+    alert('Speech recognition not supported in this browser. Use Chrome/Edge.');
+    return;
+  }
+  const R = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  R.lang = 'en-IN';
+  R.start();
+  R.onresult = (evt) => {
+    const text = evt.results[0][0].transcript;
+    el('q').value = text;
+    doSearch(text);
+  };
+  R.onerror = ()=>alert('Voice recognition failed. Try again.');
+}
+
+///////////////// Image recognition ///////////////////
+// If VISION_API_KEY is set, use Google Vision Landmark Detection (client-side POST) — demo only.
+// Otherwise use TensorFlow.js MobileNet model in browser (fallback).
+async function identifyImage(file){
+  if(!file){ alert('Choose an image file first'); return; }
+  writeOutput('<p>🔎 Identifying image — please wait...</p>');
+  // read as base64
+  const b64 = await readFileAsBase64(file);
+  // if Vision API key provided, call it
+  if(VISION_API_KEY && VISION_API_KEY.trim().length>10){
+    try{
+      const resp = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          requests:[{
+            image:{content: b64.split(',')[1]},
+            features:[{type:'LANDMARK_DETECTION', maxResults:5}]
+          }]
+        })
+      });
+      const j = await resp.json();
+      const lm = j.responses?.[0]?.landmarkAnnotations?.[0];
+      if(lm && lm.description){
+        const name = lm.description;
+        writeOutput(`<p>🖼️ Detected (Vision API): <b>${name}</b></p>`);
+        return doSearch(name);
+      }
+    }catch(e){
+      console.warn('Vision API failed', e);
+    }
+  }
+  // Fallback: Use MobileNet in-browser
+  return mobilenetIdentify(b64);
+}
+
+function readFileAsBase64(file){
+  return new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>res(fr.result);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+// load Mobilenet and predict
+async function mobilenetIdentify(dataUrl){
+  // lazy load tfjs + mobilenet
+  if(!window.tf){
+    writeOutput('<p>Loading ML model in browser (this may take a few seconds)...</p>');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js');
+  }
+  const img = new Image();
+  img.src = dataUrl;
+  await img.decode();
+  // append temporarily to body to let mobilenet work with it
+  img.style.cssText = 'display:none;max-width:512px';
+  document.body.appendChild(img);
+  const model = await mobilenet.load();
+  const predictions = await model.classify(img);
+  img.remove();
+  if(predictions && predictions.length){
+    // take top label
+    const label = predictions[0].className;
+    writeOutput(`<p>📷 Top label from MobileNet: <b>${label}</b></p><p>Trying to look up this label on Wikipedia...</p>`);
+    // Try Wikipedia lookup for label
+    return doSearch(label);
+  } else {
+    writeOutput('<p>❌ No label found by MobileNet.</p>');
+  }
+}
+
+// helper to load external script dynamically
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }) }
+
+///////////////// Main search logic ///////////////////
+async function doSearch(query){
+  if(!query || !query.trim()){ writeOutput('<p>Enter a monument name or upload an image.</p>'); return; }
+  writeOutput(`<p>🔍 Searching for <b>${escapeHtml(query)}</b> — fetching info from Wikipedia...</p>`);
+  try{
+    // try exact title first
+    let data = null;
+    // Wikipedia summary endpoint will attempt title; if not exact, we will fallback to search
+    const title = query.trim();
+    try{ data = await wikiFetch(title); }catch(e){ data = null; }
+    if(!data || !data.title){
+      // Use Wikipedia opensearch to get suggested title
+      const suggestion = await wikiSearchSuggestion(title);
+      if(suggestion) data = await wikiFetch(suggestion);
+    }
+    if(!data || !data.title){
+      writeOutput(`<p>❌ Could not find a Wikipedia page for "${escapeHtml(query)}". Try another name.</p>`);
+      return;
+    }
+    // Build UI
+    const titleText = data.title;
+    const extract = data.extract || 'No summary available.';
+    const imgUrl = data.thumbnail?.source || `https://source.unsplash.com/900x600/?${encodeURIComponent(titleText)}`;
+    // map: check our COORDS table first; if not, try to fetch coordinates via MediaWiki API
+    const coordsKey = bestLocalMatch(titleText);
+    let coords = coordsKey ? COORDS[coordsKey] : null;
+    if(!coords){
+      // try fetch coords from MediaWiki
+      const coordsFromWiki = await wikiGetCoordinates(titleText);
+      if(coordsFromWiki) coords = coordsFromWiki;
+    }
+    const mapHtml = coords ? mapHtmlForCoords(coords[0], coords[1]) : '<p>📍 Location not available.</p>';
+    // show suggestion if our local best match differs
+    const localMatchNote = (coordsKey && coordsKey !== titleText.toLowerCase()) ? `<p class="chip">Local best match: ${coordsKey}</p>` : '';
+    const wikiUrl = data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${sanitizeForUrl(titleText)}`;
+    // render
+    writeOutput(`
+      ${localMatchNote}
+      <h2>${escapeHtml(titleText)}</h2>
+      <img id="mainImage" src="${imgUrl}" alt="${escapeHtml(titleText)}" />
+      <p>${escapeHtml(extract)}</p>
+      ${mapHtml}
+      <div style="margin-top:10px">
+        <button onclick="speakText(${JSON.stringify(extract)})" class="secondary">🔊 Speak</button>
+        <a class="link" href="${wikiUrl}" target="_blank" style="margin-left:12px">📖 Discover more on Wikipedia</a>
+      </div>
+    `);
+  }catch(err){
+    console.error(err);
+    writeOutput('<p>⚠️ Error while searching. Check console for details.</p>');
+  }
+}
+
+// small safe Wiki fetch with 404 handling
+async function wikiFetch(title){
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${sanitizeForUrl(title)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('wiki fetch failed');
+  return res.json();
+}
+
+// opensearch suggestion
+async function wikiSearchSuggestion(query){
+  const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${sanitizeForUrl(query)}&limit=3&namespace=0&format=json&origin=*`;
+  const res = await fetch(url);
+  if(!res.ok) return null;
+  const j = await res.json();
+  const suggestions = j[1]; // array of titles
+  return suggestions && suggestions.length ? suggestions[0] : null;
+}
+
+// try to get coordinates via MediaWiki query
+async function wikiGetCoordinates(title){
+  try{
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${sanitizeForUrl(title)}&prop=coordinates&format=json&origin=*`;
+    const res = await fetch(url);
+    if(!res.ok) return null;
+    const j = await res.json();
+    const pages = j.query?.pages;
+    if(!pages) return null;
+    const pageId = Object.keys(pages)[0];
+    const page = pages[pageId];
+    if(page && page.coordinates && page.coordinates.length){
+      const c = page.coordinates[0];
+      return [c.lat, c.lon];
+    }
+  }catch(e){ /* ignore */ }
+  return null;
+}
+
+// pick best local COORDS match by fuzzy measure of title
+function bestLocalMatch(title){
+  title = title.toLowerCase();
+  let best=null, bestD=Infinity;
+  Object.keys(COORDS).forEach(k=>{
+    const d = levenshtein(title,k);
+    if(d < bestD){ bestD=d; best=k; }
+  });
+  // if distance is too large, return null
+  if(bestD > Math.max(3, Math.floor(title.length*0.5))) return null;
+  return best;
+}
+
+// map html helper uses Google maps embed
+function mapHtmlForCoords(lat, lon){
+  const src = `https://www.google.com/maps?q=${lat},${lon}&output=embed`;
+  return `<iframe class="map" src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+}
+
+// escape for innerHTML
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+///////////////// UI wiring ///////////////////
+el('searchBtn').addEventListener('click', ()=>doSearch(el('q').value));
+el('talkBtn').addEventListener('click', startListening);
+el('identifyBtn').addEventListener('click', async ()=>{
+  const file = el('file').files[0];
+  if(!file){ alert('Select an image file first'); return; }
+  await identifyImage(file);
+});
+
+// allow press Enter in input to search
+el('q').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ doSearch(el('q').value); } });
+
+// initialize output
+writeOutput('<p>Type a famous monument (or upload a photo) and press Search / Identify. Voice input and Speak are supported.</p>');
+
+</script>
+</body>
+</html>
